@@ -4,62 +4,79 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def solve_euler_explicit(f, dt, tf, x0, t0 = 0): 
-	t = np.arange(t0, tf, dt)
-	x = [x0]
-	for temps in t[:-1]:
-		x.append(x[-1] + dt * f(temps, x[-1]))
-	return t, np.array(x)
+    t, x = [t0], [x0]
+    while t[-1] < tf :
+        x.append(x[-1] + dt * f(t[-1], x[-1]))
+        t.append(t[-1] + dt)
+    return t, x
 
-
-def ecart_max(u, f, dt, tf, x0, t0 = 0):
-	t, x = u(f, dt, tf, x0, t0 = 0)
-	e = []
-	for i, temp in enumerate(t):
-		e.append(abs(x[i] - np.sin(temp)))
-	return max(e)
 
 def f(t, x):
-	return np.cos(x)
+    return x
+
+
+t0, x0 = 0, 1
+tf = 5
+dt = 0.001
+
+t, x = solve_euler_explicit(f, dt, tf, x0 , t0)
+sol = [np.exp(temps) for temps in t]
+
+
+def g(t, x):
+    return np.cos(t)*x
+
+
+t0, x0 = 0, 1
+tf = 5
+
+t1, x1 = solve_euler_explicit(g, 0.001, tf, x0 , t0 = 0)
+sol = [np.exp(np.sin((temps))) for temps in t]
+
+
+def ecart_max(u, f, f_sol, dt, tf, x0, t0 = 0):
+    t, x = u(f, dt, tf, x0, t0 = 0)
+    e = []
+    for i, temp in enumerate(t):
+        e.append(abs(x[i] - f_sol(temp)))
+    return max(e)
 
 pas = np.arange(0.001, 0.1, 0.001)
+f_sol = np.exp
 
-#on remarquera que au bout d'un moment c'est plus linéaire 
-
-e = []
+e_11 = []
 for dt in pas:
-	e.append(ecart_max(solve_euler_explicit, f, 1, dt, 10))
-
-
-plt.plot(pas, e, '.', color = 'pink')
-plt.show()
+    e_11.append(ecart_max(solve_euler_explicit, f, f_sol, dt, 10, 1))
 
 def solve_heun_explicit(f, dt, tf, x0, t0 = 0):
-	t = np.arange(t0, tf, dt)
-	x = [x0]
-	for i, temp in enumerate(t[:-1]):
-		x.append(x[-1] + dt/2 * (f(temp, x[-1]) + f(t[i+1], x[-1] + dt * f(temp, x[-1]))))
-	return t, np.array(x)
+    t, x = [t0, t0 + dt], [x0]
+    i = 0
+    while t[-1] < tf:
+        x.append(x[-1] + dt/2 * (f(t[i], x[-1]) + f(t[i+1], x[-1] + dt * f(t[i], x[-1]))))
+        t.append(t[-1] + dt)
+        i += 1
+    return t[:-1], x
 
 
-T = 10
+x0 = 1
+tf = 5
 
-t, x = solve_euler_explicit(f, 0.001, T, 0, t0 = 0)
-u, v = solve_heun_explicit(f, 0.001, T, 0, t0 = 0)
-k = [np.sin(temp) for temp in t]
+t, x = solve_heun_explicit(f, 0.001, tf, x0 , t0 = 0)
+sol = [np.exp(temps) for temps in t]
+
+plt.plot(t, x1, color = 'green')
+plt.plot(t, sol, color = 'red')
 plt.plot(t, x, color = 'blue')
-plt.plot(t, v, color = 'red')
-plt.plot(t, k, color = 'green')
+
 plt.show()
 
 
 pas = np.arange(0.001, 0.1, 0.001)
 
-e = []
+e_2 = []
 for dt in pas:
-	e.append(ecart_max(solve_heun_explicit, f, 1, dt, 10))
+    e_2.append(ecart_max(solve_heun_explicit, f, dt, 10, 1))
 
 
-plt.plot(pas, e, '.', color = 'blue')
+plt.plot(pas**2, e_2, '+', color = 'purple')
 plt.show()
-
-
